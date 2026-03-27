@@ -1,0 +1,8 @@
+CREATE TABLE IF NOT EXISTS farms (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  farm_name VARCHAR(255) NOT NULL,
+  crop_type VARCHAR(100) NOT NULL,
+  geo_polygon JSONB NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);

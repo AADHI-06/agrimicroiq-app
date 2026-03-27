@@ -1,0 +1,7 @@
+CREATE TABLE IF NOT EXISTS logs (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  level VARCHAR(20) NOT NULL,
+  message TEXT NOT NULL,
+  context JSONB,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);

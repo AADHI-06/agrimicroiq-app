@@ -1,0 +1,140 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@700;800;900&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* Midnight Editorial Design Tokens */
+  --bg-primary: #050505;
+  --bg-secondary: #0a0a0a;
+  --text-primary: #FFFFFF;
+  --text-muted: rgba(255, 255, 255, 0.4);
+  --accent-orange: #f97316;
+  --accent-blue: #3b82f6;
+  --border-color: rgba(255, 255, 255, 0.05);
+  --radius-sharp: 2px;
+}
+
+body {
+  margin: 0;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: 'Inter', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+h1, h2, h3, h4, .font-display {
+  font-family: 'Outfit', sans-serif;
+  text-transform: uppercase;
+  letter-spacing: -0.05em;
+  font-weight: 900;
+}
+
+/* Midnight Utility Components */
+.editorial-card {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sharp);
+  transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.editorial-card:hover {
+  border-color: rgba(255, 255, 255, 0.15);
+  transform: scale(1.02);
+  box-shadow: 0 0 40px rgba(255, 255, 255, 0.03);
+}
+
+.button-editorial {
+  padding: 1rem 2rem;
+  border: 1px solid var(--text-primary);
+  color: var(--text-primary);
+  font-weight: 700;
+  font-size: 0.75rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  transition: all 0.4s ease;
+  background: transparent;
+}
+
+.button-editorial:hover {
+  background: var(--text-primary);
+  color: var(--bg-primary);
+}
+
+/* Light Leaks & Glows */
+.light-leak-orange {
+  position: absolute;
+  width: 600px;
+  height: 600px;
+  background: radial-gradient(circle, rgba(249, 115, 22, 0.15) 0%, transparent 70%);
+  filter: blur(120px);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.light-leak-blue {
+  position: absolute;
+  width: 500px;
+  height: 500px;
+  background: radial-gradient(circle, rgba(59, 130, 246, 0.15) 0%, transparent 70%);
+  filter: blur(120px);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Animations */
+@keyframes revealUp {
+  from { opacity: 0; transform: translateY(40px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-reveal {
+  animation: revealUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Map Theming Extensions */
+.leaflet-container {
+  filter: invert(100%) hue-rotate(180deg) brightness(85%) contrast(90%);
+  background: var(--bg-primary) !important;
+}
+
+/* Responsive Editorial Padding */
+.editorial-container {
+  padding-left: clamp(2rem, 8vw, 8rem);
+  padding-right: clamp(2rem, 8vw, 8rem);
+}
+/* Custom Scrollbar */
+.editorial-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+.editorial-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.editorial-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+}
+
+@keyframes pulse-slow {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 0.8; }
+}
+
+.animate-pulse-slow {
+  animation: pulse-slow 3s infinite ease-in-out;
+}
+
+/* Text Selection */
+::selection {
+  background: var(--accent-orange);
+  color: white;
+}
+
+/* HUD Glass */
+.hud-glass {
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}

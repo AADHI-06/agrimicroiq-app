@@ -1,7 +1,25 @@
 node_modules/
 .env
 .env.local
+.env.development
+.env.production
 .firebase/
 coverage/
 dist/
 build/
+firebaseServiceAccount.json
+*.json.bak
+*.log
+
+# Node
+node_modules/
+
+# Python
+__pycache__/
+*.pyc
+
+# OS files
+.DS_Store
+
+.firebase
+.vscode
