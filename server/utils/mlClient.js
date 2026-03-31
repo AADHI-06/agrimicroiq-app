@@ -17,7 +17,7 @@ async function callMLService(endpoint, payload, token = null) {
       payload,
       { 
         headers,
-        timeout: 10000 // 10-second timeout for ML model execution
+        timeout: 60000 // 60-second timeout to allow Render Free-Tier Container Spin-Up
       }
     );
     return response.data;
