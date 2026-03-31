@@ -140,7 +140,13 @@ const FarmList = () => {
       
     } catch (err) {
       console.error('❌ Yield Simulation Error:', err);
-      alert('Failed to simulate yield. Review ML bindings.');
+      const status = err.response?.status;
+      const detail = err.response?.data?.error || err.response?.data?.detail || err.message;
+      if (status === 502 || status === 503) {
+        alert('ML Service is waking up (Render cold start). Please wait 30 seconds and try again.');
+      } else {
+        alert(`Yield simulation failed (${status || 'network'}): ${detail}`);
+      }
     } finally {
       setSimulatingYieldId(null);
     }
