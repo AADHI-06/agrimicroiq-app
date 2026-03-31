@@ -13,7 +13,7 @@ async function callMLService(endpoint, payload, token = null) {
 
   try {
     const response = await axios.post(
-      `${process.env.ML_SERVICE_URL}${endpoint}`,
+      `${process.env.ML_SERVICE_URL || 'https://agrimicroiq-ml-service.onrender.com'}${endpoint}`,
       payload,
       { 
         headers,
