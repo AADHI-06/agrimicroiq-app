@@ -39,8 +39,12 @@ async function verifyToken(req, res, next) {
     next();
   } catch (error) {
     securityLogger.logViolation("Invalid token error", { error: error.message, path: req.path });
-    return res.status(401).json({ error: "Invalid or Expired Token" });
+    return res.status(401).json({ 
+      error: "Unauthorized", 
+      message: "Invalid or expired token" 
+    });
   }
+
 }
 
 module.exports = verifyToken;
