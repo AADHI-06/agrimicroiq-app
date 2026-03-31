@@ -23,12 +23,14 @@ const { apiLimiter, authLimiter, mlLimiter } = require('./middleware/rateLimiter
 const app = express();
 app.use(cors({
   origin: [
-    "https://agrimicroiq-app.onrender.com", // Backend (self-reference)
-    "https://agri-micro-iq.web.app",        // Frontend (Firebase)
-    "http://localhost:3000"                // Local development
+    "https://agrimicroiq-app.onrender.com",
+    "https://agri-micro-iq.web.app",
+    "https://agri-micro-iq.firebaseapp.com",
+    "http://localhost:3000"
   ],
   credentials: true
 }));
+
 app.use(express.json());
 
 // Apply general API rate limiting to all requests under /api
@@ -112,6 +114,11 @@ app.get("/api/health", (req, res) => {
     timestamp: new Date().toISOString()
   });
 });
+
+app.get("/api/test", (req, res) => {
+  res.json({ message: "Backend working" });
+});
+
 
 app.use('/api/auth', authRoutes);
 app.use('/api/farms', farmRoutes);
