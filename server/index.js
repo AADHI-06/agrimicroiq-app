@@ -21,7 +21,14 @@ const pestSummaryRoutes = require('./routes/pestSummaryRoutes');
 const { apiLimiter, authLimiter, mlLimiter } = require('./middleware/rateLimiters');
 
 const app = express();
-app.use(cors());
+app.use(cors({
+  origin: [
+    "https://agrimicroiq-app.onrender.com", // Backend (self-reference)
+    "https://agri-micro-iq.web.app",        // Frontend (Firebase)
+    "http://localhost:3000"                // Local development
+  ],
+  credentials: true
+}));
 app.use(express.json());
 
 // Apply general API rate limiting to all requests under /api
@@ -95,6 +102,15 @@ app.use((req, res, next) => {
   };
   
   next();
+});
+
+// Deployment Health Check
+app.get("/api/health", (req, res) => {
+  res.status(200).json({
+    status: "OK",
+    service: "AgriMicro IQ Backend",
+    timestamp: new Date().toISOString()
+  });
 });
 
 app.use('/api/auth', authRoutes);

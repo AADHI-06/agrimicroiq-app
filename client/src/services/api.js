@@ -2,7 +2,11 @@ import axios from 'axios';
 import { auth } from '../firebase';
 
 // Use relative URL by default for Firebase Hosting environment
-const API_URL = process.env.REACT_APP_API_URL || '/api';
+// Ensure the base URL correctly includes the /api prefix for the production backend
+const API_BASE = process.env.REACT_APP_API_BASE_URL;
+const API_URL = API_BASE 
+  ? (API_BASE.endsWith('/') ? `${API_BASE}api` : `${API_BASE}/api`)
+  : '/api';
 
 const api = axios.create({
   baseURL: API_URL,
