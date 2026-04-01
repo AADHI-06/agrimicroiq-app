@@ -48,6 +48,9 @@ const FarmList = () => {
     };
 
     fetchFarms();
+
+    // Pre-warm ML service container (fire-and-forget — prevents cold start when user clicks Simulate)
+    api.get('/ml/warm').catch(() => {});
   }, []);
 
   const handleGenerateNDVI = async (farmId) => {

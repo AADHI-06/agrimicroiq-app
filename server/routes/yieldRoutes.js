@@ -1,12 +1,12 @@
 const express = require('express');
 const supabase = require('../supabaseClient');
 const callMLService = require('../utils/mlClient');
+const { simulateYieldLocally } = require('../utils/yieldFallback');
 const verifyToken = require('../middleware/authMiddleware');
 const { validate, schemas } = require('../middleware/validationMiddleware');
 
 const router = express.Router();
 
-// POST /api/yield/simulate
 // POST /api/yield/simulate
 router.post('/simulate', verifyToken, validate(schemas.yieldSim), async (req, res) => {
   try {
@@ -70,7 +70,7 @@ router.post('/simulate', verifyToken, validate(schemas.yieldSim), async (req, re
     const avgFertilizer = totalFertilizer / zones.length;
     const avgWater = totalWater / zones.length;
 
-    // 4. Call ML endpoint /simulate-yield with Crop Intelligence
+    // 4. Call ML endpoint /simulate-yield — with local fallback if ML is down
     const mlPayload = { 
       farmId: farmId,
       cropType: farm.crop_type,
@@ -84,15 +84,20 @@ router.post('/simulate', verifyToken, validate(schemas.yieldSim), async (req, re
     try {
       mlResponse = await callMLService('/simulate-yield', mlPayload, req.headers.authorization);
     } catch (mlErr) {
-      console.error("ML Service /simulate-yield call failed:", mlErr.response ? mlErr.response.data : mlErr.message);
+      // ML service is down (cold start / sleeping) — use local fallback
+      const status = mlErr.response?.status;
+      console.warn(`ML Service unavailable (status: ${status || 'timeout'}). Using local yield fallback.`);
       
-      const status = mlErr.response ? mlErr.response.status : 502;
-      const errorMsg = mlErr.response?.data?.detail || "ML simulation service unavailable.";
-      
-      return res.status(status).json({ 
-        error: errorMsg,
-        details: mlErr.message
-      });
+      try {
+        mlResponse = simulateYieldLocally(mlPayload);
+        console.log('✅ Local yield fallback executed successfully.');
+      } catch (fallbackErr) {
+        console.error("Local fallback also failed:", fallbackErr.message);
+        return res.status(500).json({ 
+          error: "Yield simulation failed. ML service is unavailable and local fallback errored.",
+          details: fallbackErr.message
+        });
+      }
     }
 
     // 5. Extract Optimized Results (Strip " tons" and "₹" for DB storage)
@@ -128,3 +133,4 @@ router.post('/simulate', verifyToken, validate(schemas.yieldSim), async (req, re
 });
 
 module.exports = router;
+

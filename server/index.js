@@ -140,10 +140,21 @@ app.get('/health', async (req, res) => {
   res.status(200).json({ status: 'OK' });
 });
 
+// ML Service warm-up endpoint (frontend can call this to pre-wake the container)
+const { pingMLService, getStatus: getMLStatus } = require('./utils/mlKeepAlive');
+app.get('/api/ml/warm', async (req, res) => {
+  await pingMLService();
+  res.status(200).json({ status: 'warming', ml: getMLStatus() });
+});
+
 if (require.main === module) {
   const PORT = process.env.PORT || 5000;
   app.listen(PORT, '0.0.0.0', () => {
     console.log(`Server running on port ${PORT}`);
+    
+    // Start ML keep-alive pinger (only on Render, not on Firebase Functions)
+    const { startKeepAlive } = require('./utils/mlKeepAlive');
+    startKeepAlive();
   });
 }
 
@@ -151,3 +162,4 @@ const functions = require('firebase-functions');
 
 module.exports = app;
 exports.api = functions.https.onRequest(app);
+
