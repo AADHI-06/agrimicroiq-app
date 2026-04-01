@@ -31,6 +31,10 @@ const FarmList = () => {
   const [cardView, setCardView] = useState({}); // { [farmId]: 'telemetry' | 'trends' }
   const [revealedStates, setRevealedStates] = useState({}); // { [zoneId]: { predicted: bool, optimized: bool, actioned: bool } }
 
+  // Delete farm state
+  const [deletingFarmId, setDeletingFarmId] = useState(null);
+  const [confirmDeleteFarm, setConfirmDeleteFarm] = useState(null); // farm object to confirm delete
+
   useEffect(() => {
     const fetchFarms = async () => {
       try {
@@ -215,7 +219,31 @@ const FarmList = () => {
       setStressingId(null);
     }
   };
-  
+
+  const handleDeleteFarm = async (farmId) => {
+    try {
+      setDeletingFarmId(farmId);
+      await api.delete(`/farms/${farmId}`);
+
+      // Remove farm from local state
+      setFarms(prev => prev.filter(f => f.id !== farmId));
+
+      // Cleanup all associated client-side state
+      setFarmZones(prev => { const n = { ...prev }; delete n[farmId]; return n; });
+      setYieldSimulations(prev => { const n = { ...prev }; delete n[farmId]; return n; });
+      setShowHistory(prev => { const n = { ...prev }; delete n[farmId]; return n; });
+      setCardView(prev => { const n = { ...prev }; delete n[farmId]; return n; });
+
+      setConfirmDeleteFarm(null);
+    } catch (err) {
+      console.error('❌ Farm Delete Error:', err);
+      const detail = err.response?.data?.error || err.message;
+      alert(`Failed to delete farm: ${detail}`);
+    } finally {
+      setDeletingFarmId(null);
+    }
+  };
+
   const renderTelemetryGrid = (farmId) => {
     const zones = farmZones[farmId] || [];
     if (zones.length === 0) return (
@@ -369,6 +397,47 @@ const FarmList = () => {
   }
 
   return (
+    <>
+    {/* Delete Confirmation Modal */}
+    {confirmDeleteFarm && (
+      <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-sm animate-reveal">
+        <div className="bg-[#0a0a0a] border border-white/10 p-10 max-w-md w-full mx-4 shadow-2xl">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-10 h-10 flex items-center justify-center border border-red-500/30 bg-red-500/10">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+            </div>
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-[0.3em] text-red-500">Destructive Action</p>
+              <h3 className="text-lg font-black text-white">Delete Farm</h3>
+            </div>
+          </div>
+          <p className="text-sm text-white/60 leading-relaxed mb-2">
+            You are about to permanently delete <span className="font-black text-white">{confirmDeleteFarm.farm_name}</span>.
+          </p>
+          <p className="text-xs text-white/30 mb-8">
+            All associated zones, NDVI data, pest predictions, and simulation history will be lost. This action cannot be undone.
+          </p>
+          <div className="flex gap-3">
+            <button
+              onClick={() => setConfirmDeleteFarm(null)}
+              className="flex-1 py-3 text-[10px] font-black uppercase tracking-[0.2em] text-white/60 border border-white/10 hover:border-white/30 hover:text-white transition-all"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={() => handleDeleteFarm(confirmDeleteFarm.id)}
+              disabled={deletingFarmId === confirmDeleteFarm.id}
+              className="flex-1 py-3 text-[10px] font-black uppercase tracking-[0.2em] text-white bg-red-600 hover:bg-red-500 transition-all disabled:opacity-50"
+            >
+              {deletingFarmId === confirmDeleteFarm.id ? 'Deleting...' : 'Confirm Delete'}
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
+
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12 animate-reveal">
       {farms.map((farm) => (
         <div key={farm.id} className="editorial-card group flex flex-col min-h-[500px] relative">
@@ -390,6 +459,16 @@ const FarmList = () => {
                 Node ID: {farm.id.split('-')[0]}
               </span>
             </div>
+            {/* Delete Button */}
+            <button
+              onClick={(e) => { e.stopPropagation(); setConfirmDeleteFarm(farm); }}
+              className="absolute top-5 right-5 z-20 w-8 h-8 flex items-center justify-center border border-white/0 hover:border-red-500/40 bg-black/40 hover:bg-red-500/10 text-white/20 hover:text-red-500 transition-all opacity-0 group-hover:opacity-100"
+              title="Delete Farm"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+            </button>
           </div>
 
           <div className="p-8 flex-1 flex flex-col">
@@ -512,6 +591,7 @@ const FarmList = () => {
         </div>
       ))}
     </div>
+    </>
   );
 };
 

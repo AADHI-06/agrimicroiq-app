@@ -154,4 +154,62 @@ router.post('/predict-risk', verifyToken, validate(schemas.zoneAccess), async (r
 });
 
 
+/*
+DELETE FARM
+DELETE /api/farms/:id
+*/
+router.delete('/:id', verifyToken, async (req, res) => {
+  try {
+    const farmId = req.params.id;
+    const supabaseUid = req.user.supabase_uid;
+
+    if (!supabaseUid) {
+      return res.status(403).json({ error: "User profile not initialized" });
+    }
+
+    // Verify ownership
+    const { data: farm, error: fetchError } = await supabase
+      .from('farms')
+      .select('id')
+      .eq('id', farmId)
+      .eq('user_id', supabaseUid)
+      .single();
+
+    if (fetchError || !farm) {
+      return res.status(404).json({ error: "Farm not found or access denied." });
+    }
+
+    // Delete associated micro_zones (and their pest_predictions) first
+    const { data: zones } = await supabase
+      .from('micro_zones')
+      .select('id')
+      .eq('farm_id', farmId);
+
+    if (zones && zones.length > 0) {
+      const zoneIds = zones.map(z => z.id);
+      await supabase.from('pest_predictions').delete().in('zone_id', zoneIds);
+      await supabase.from('micro_zones').delete().eq('farm_id', farmId);
+    }
+
+    // Delete the farm itself
+    const { error: deleteError } = await supabase
+      .from('farms')
+      .delete()
+      .eq('id', farmId)
+      .eq('user_id', supabaseUid);
+
+    if (deleteError) {
+      return res.status(500).json({ error: deleteError.message });
+    }
+
+    securityLogger.logActivity("INFO", "Farm Deleted", { farmId, userId: supabaseUid });
+    res.status(200).json({ message: "Farm deleted successfully", farmId });
+
+  } catch (err) {
+    console.error("Farm delete error:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+
 module.exports = router;
